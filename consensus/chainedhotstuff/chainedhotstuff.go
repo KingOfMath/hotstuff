@@ -41,6 +41,7 @@ func (hs *ChainedHotStuff) qcRef(qc consensus.QuorumCert) (*consensus.Block, boo
 
 // CommitRule decides whether an ancestor of the block should be committed.
 func (hs *ChainedHotStuff) CommitRule(block *consensus.Block) *consensus.Block {
+	// parent
 	block1, ok := hs.qcRef(block.QuorumCert())
 	if !ok {
 		return nil
@@ -50,6 +51,7 @@ func (hs *ChainedHotStuff) CommitRule(block *consensus.Block) *consensus.Block {
 	// This is done through AdvanceView, which the Consensus implementation will call.
 	hs.mods.Logger().Debug("PRE_COMMIT: ", block1)
 
+	// grandparent
 	block2, ok := hs.qcRef(block1.QuorumCert())
 	if !ok {
 		return nil
@@ -60,6 +62,7 @@ func (hs *ChainedHotStuff) CommitRule(block *consensus.Block) *consensus.Block {
 		hs.bLock = block2
 	}
 
+	// great-grandparent
 	block3, ok := hs.qcRef(block2.QuorumCert())
 	if !ok {
 		return nil
@@ -77,9 +80,13 @@ func (hs *ChainedHotStuff) CommitRule(block *consensus.Block) *consensus.Block {
 func (hs *ChainedHotStuff) VoteRule(proposal consensus.ProposeMsg) bool {
 	block := proposal.Block
 
+	// parent block
 	qcBlock, haveQCBlock := hs.mods.BlockChain().Get(block.QuorumCert().BlockHash())
 
 	safe := false
+	// have parent block and its view is greater than current block
+	// if no more block: liveness breaks
+	// if block does not extend QC: safety breaks
 	if haveQCBlock && qcBlock.View() > hs.bLock.View() {
 		safe = true
 	} else {

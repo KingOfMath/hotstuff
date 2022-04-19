@@ -61,11 +61,13 @@ func (hs *SimpleHotStuff) VoteRule(proposal consensus.ProposeMsg) bool {
 // CommitRule decides if an ancestor of the block can be committed, and returns the ancestor, otherwise returns nil.
 func (hs *SimpleHotStuff) CommitRule(block *consensus.Block) *consensus.Block {
 	// will consider if the great-grandparent of the new block can be committed.
+	// parent
 	p, ok := hs.mods.BlockChain().Get(block.QuorumCert().BlockHash())
 	if !ok {
 		return nil
 	}
 
+	// grandparent
 	gp, ok := hs.mods.BlockChain().Get(p.QuorumCert().BlockHash())
 	if ok && gp.View() > hs.locked.View() {
 		hs.locked = gp
