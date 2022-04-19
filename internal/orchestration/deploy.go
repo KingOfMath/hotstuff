@@ -56,10 +56,9 @@ func Deploy(g iago.Group, cfg DeployConfig) (workers map[string]WorkerSession, e
 		panic(err)
 	}
 
-	tmpDir := "hotstuff." + randString(8)
-
 	g.Run("Create temporary directory",
 		func(ctx context.Context, host iago.Host) (err error) {
+			tmpDir := "hotstuff." + randString(8)
 			testDir := strings.TrimPrefix(tempDirPath(host, tmpDir), "/")
 			dataDir := testDir + "/data"
 			host.SetVar("test-dir", testDir)
@@ -107,7 +106,7 @@ func FetchData(g iago.Group, dest string) (err error) {
 	if dest != "" {
 		g.Run("Download test data",
 			func(ctx context.Context, host iago.Host) (err error) {
-				src, err := iago.NewPathFromAbs(iago.GetStringVar(host, "data-dir")) // assuming the dir variable was set earlier
+				src, err := iago.NewPath("/", iago.GetStringVar(host, "data-dir")) // assuming the dir variable was set earlier
 				if err != nil {
 					return err
 				}
